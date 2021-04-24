@@ -1,5 +1,3 @@
-//import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'components/bottom_button.dart';
@@ -8,7 +6,13 @@ import 'screens/add_new_item.dart';
 import 'screens/homePage.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
   runApp(MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => Data())],
       child: MyApp()));
@@ -37,9 +41,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  //late final dynamic data;
+  Future<dynamic> getData() async {
+    final Stream<QuerySnapshot> document =
+        _firestore.collection("todos_collection").snapshots();
+
+    document.forEach((QuerySnapshot snapshot) async {
+      snapshot.docs.forEach((DocumentSnapshot docs) async {
+        Map<String, dynamic> list = docs.data();
+
+        list.forEach((k, v) => print('key-> ${k}: value-> ${v}'));
+
+       // print(list);
+      });
+    });
+
+    print('');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    getData();
+  }
+
   @override
   Widget build(BuildContext context) {
-    
     return SafeArea(
       child: Scaffold(
         body: Column(
@@ -100,68 +129,22 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }
 
-  Widget _buildBottomBar(BuildContext context) {
-    return BottomButton(
-        title: 'Add Item',
-        onTap: () {
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (BuildContext context) {
-              return Container(
-                height: 220,
-                color: Color(0xff757575),
-                child: AddTaskPage(),
-              );
-            },
-          );
-        });
-  }
-
-// class AddNewItemButton extends StatefulWidget {
-//   const AddNewItemButton({
-//     Key key,
-//   }) : super(key: key);
-
-//   @override
-//   _AddNewItemButtonState createState() => _AddNewItemButtonState();
-// }
-
-// class _AddNewItemButtonState extends State<AddNewItemButton> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return TextButton(
-//       style: ButtonStyle(),
-//       onPressed: () async {
-//         print('Add New Item');
-//         final String newItem = await Navigator.push(
-//           context,
-//           MaterialPageRoute(builder: (context) => AddnewItem(args: 'data 2')),
-//         );
-//         ScaffoldMessenger.of(context)
-//           ..removeCurrentSnackBar()
-//           ..showSnackBar(SnackBar(content: Text("$newItem")));
-//         print(newItem);
-//       },
-//       child: Container(
-//         width: double.infinity,
-//         height: 150,
-//         decoration: BoxDecoration(
-//           color: Colors.orange,
-//           shape: BoxShape.rectangle,
-//           borderRadius: BorderRadius.all(Radius.circular(15.0)),
-//         ),
-//         child: Center(
-//           child: Text(
-//             'Add New Item',
-//             style: TextStyle(
-//                 fontWeight: FontWeight.w500, color: Colors.black, fontSize: 30),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+Widget _buildBottomBar(BuildContext context) {
+  return BottomButton(
+      title: 'Add Item',
+      onTap: () {
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          builder: (BuildContext context) {
+            return Container(
+              height: 220,
+              color: Color(0xff757575),
+              child: AddTaskPage(),
+            );
+          },
+        );
+      });
+}
