@@ -1,73 +1,105 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:todoapps/constants.dart';
-import 'package:todoapps/model/ItemData.dart';
-import 'package:todoapps/screens/detailed_screen.dart';
 
-class TileItemWidget extends StatefulWidget {
-  final ItemData itemData;
+import '../screens/detailed_screen.dart';
 
-  TileItemWidget({Key key, this.itemData}) : super(key: key);
+class TileItem extends StatefulWidget {
+  final bool isChecked;
+  final String image;
+  final String title;
+
+  final Function onCheckedChanges;
+
+  TileItem({
+    this.isChecked = false,
+    @required this.title,
+    this.image,
+    @required this.onCheckedChanges,
+  });
 
   @override
-  _TileItemWidgetState createState() => _TileItemWidgetState(itemData);
+  _TileItemState createState() => _TileItemState();
 }
 
-class _TileItemWidgetState extends State<TileItemWidget> {
-  final ItemData itemData;
+class _TileItemState extends State<TileItem>
+    with SingleTickerProviderStateMixin {
+  AnimationController  controller;
+  Animation<double> offsetAnimation;
 
-  _TileItemWidgetState(this.itemData);
+  @override
+  void initState() {
+    controller = AnimationController(
+        duration: const Duration(milliseconds: 500), vsync: this);
+
+    offsetAnimation = Tween(begin: 0.0, end: 12.0)
+        .chain(CurveTween(curve: Curves.linear))
+        .animate(controller)
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              controller.reverse();
+            }
+          });
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    bool isImageExists = !(widget.image == null);
+
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailedScreen(itemText: itemData.title)),
+              builder: (context) => DetailedScreen(itemText: widget.title)),
         );
-        // Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //         builder: (context) =>
-        //             DetailedScreen(itemText: itemData.title)));
       },
       child: Hero(
         tag: 'flippers',
         child: Container(
+          padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Checkbox(
-                  value: itemData.isChecked,
-                  onChanged: (bool newState) {
-                    setState(() {
-                      itemData.isChecked = newState;
-                    });
-                    print(itemData.title + ' : $newState');
-                  }),
-              CircleAvatar(
-                backgroundImage:
-                    AssetImage(constansts.imagePath + itemData.image),
+                value: widget.isChecked,
+                checkColor: Colors.white70,
+                activeColor: widget.isChecked ? Colors.grey : Colors.black,
+                onChanged: (bool value) {
+                  widget.onCheckedChanges(value ?? false);
+                },
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: AnimatedDefaultTextStyle(
-                  child: Text(itemData.title),
-                  style: itemData.isChecked
-                      ? TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          decorationStyle: TextDecorationStyle.dashed,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black,
-                          fontSize: 18,
-                        )
-                      : TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                        ),
-                  duration: Duration(milliseconds: 200),
-                ),
+              Expanded(
+                child: AnimatedBuilder(
+                    animation: controller,
+                    builder: (BuildContext context, Widget child) {
+                      return Container(
+                        margin: EdgeInsets.only(left: offsetAnimation.value),
+                        child: widget.isChecked
+                            ? showStrokedText()
+                            : showNormalText(),
+                      );
+                    }),
+              ),
+              Container(
+                margin: EdgeInsets.all(12.0),
+                width: isImageExists ? 60.0 : 10.0,
+                height: 60.0,
+                child: isImageExists
+                    ? Image(
+                        image: AssetImage('assets/image/ava2.png'),
+                        color: widget.isChecked ? Colors.white : null,
+                        colorBlendMode:
+                            widget.isChecked ? BlendMode.softLight : null,
+                        fit: BoxFit.fill,
+                      )
+                    : null,
               ),
             ],
           ),
@@ -75,4 +107,26 @@ class _TileItemWidgetState extends State<TileItemWidget> {
       ),
     );
   }
+
+  showStrokedText() => AnimatedDefaultTextStyle(
+    curve: Curves.easeInBack,
+        duration: const Duration(milliseconds: 1000),
+        style: TextStyle(
+          decoration: TextDecoration.lineThrough,
+          decorationStyle: TextDecorationStyle.dashed,
+          fontStyle: FontStyle.italic,
+          color: Colors.black,
+          fontSize: 25,
+        ),
+        child: Text(
+          widget.title,
+        ),
+      );
+
+  showNormalText() => Text(
+        widget.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontFamily: 'DancingScript', fontSize: 24),
+      );
 }

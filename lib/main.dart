@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todoapps/screens/build_list.dart';
 import 'components/bottom_button.dart';
 import 'data/data.dart';
+import 'data/item_data.dart';
 import 'screens/add_new_item.dart';
 import 'screens/homePage.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -14,7 +16,8 @@ void main() async {
   await Firebase.initializeApp();
 
   runApp(MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => Data())],
+      providers: [ChangeNotifierProvider(create: (_) => Data()),
+      ChangeNotifierProvider(create: (_) => ItemCollection()),],
       child: MyApp()));
 }
 
@@ -53,7 +56,7 @@ class _HomePageState extends State<HomePage> {
 
         list.forEach((k, v) => print('key-> ${k}: value-> ${v}'));
 
-       // print(list);
+        // print(list);
       });
     });
 
@@ -64,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    getData();
+  //  getData();
   }
 
   @override
@@ -118,7 +121,9 @@ class _HomePageState extends State<HomePage> {
             ),
             Expanded(
               flex: 8,
-              child: buildList(context),
+              child: BuildItemWidget(context),
+
+              //buildList(context),
             ),
             Expanded(
               child: _buildBottomBar(context),

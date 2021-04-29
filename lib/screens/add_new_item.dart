@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todoapps/data/data.dart';
+import 'package:todoapps/data/item_data.dart';
 import 'package:todoapps/widget/round_button.dart';
 
 
@@ -45,7 +46,7 @@ class AddTaskPage extends StatelessWidget {
             title: 'Add',
             onTap: () {
               if (newToDoTitle.isNotEmpty) {
-                Provider.of<Data>(context, listen: false).addNewItem(newToDoTitle);
+                Provider.of<ItemCollection>(context, listen: false).addItem(newToDoTitle);
               }
               Navigator.pop(context);
             },
